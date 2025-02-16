@@ -83,22 +83,77 @@ public struct VLMViewModifier: ViewModifier {
         }
       }
       .task {
+        // Create a copy of the update handler that's isolated to the main actor
+        @MainActor func updateText(_ text: String) {
+          generatedText = text
+        }
+        
+        // Convert image to Data before passing to non-isolated context
+        let imageData: Data?
+        if let image = image {
+          let context = CIContext()
+          if let cgImage = context.createCGImage(image, from: image.extent) {
+            // Create a temporary bitmap context to draw the image
+            let width = cgImage.width
+            let height = cgImage.height
+            let colorSpace = CGColorSpaceCreateDeviceRGB()
+            let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
+            
+            if let bitmapContext = CGContext(
+              data: nil,
+              width: width,
+              height: height,
+              bitsPerComponent: 8,
+              bytesPerRow: width * 4,
+              space: colorSpace,
+              bitmapInfo: bitmapInfo
+            ) {
+              // Draw the image into the context
+              let rect = CGRect(x: 0, y: 0, width: width, height: height)
+              bitmapContext.draw(cgImage, in: rect)
+              
+              // Get the data from the context
+              if let data = bitmapContext.makeImage() {
+                // Convert to JPEG data
+                imageData = context.jpegRepresentation(of: CIImage(cgImage: data), colorSpace: colorSpace)
+              } else {
+                imageData = nil
+              }
+            } else {
+              imageData = nil
+            }
+          } else {
+            imageData = nil
+          }
+        } else {
+          imageData = nil
+        }
+        
         do {
-          isGenerating = true
+          await MainActor.run { isGenerating = true }
+          
           let result = try await service.generate(
             prompt: prompt,
-            image: image,
+            imageData: imageData,  
             video: video
           ) { text in
-            generatedText = text
+            Task { @MainActor in
+              updateText(text)
+            }
           }
-          generatedText = result.output
-          onCompletion?(result.output)
+          
+          await MainActor.run {
+            generatedText = result.output
+            onCompletion?(result.output)
+          }
         } catch {
-          self.error = error
-          self.showError = true
+          await MainActor.run {
+            self.error = error
+            self.showError = true
+          }
         }
-        isGenerating = false
+        
+        await MainActor.run { isGenerating = false }
       }
       .alert("Error", isPresented: $showError) {
         Button("OK") {

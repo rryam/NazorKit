@@ -48,14 +48,14 @@ public final class VLMService: @unchecked Sendable {
   /// - Parameter progressHandler: A closure that receives loading progress updates
   /// - Returns: The loaded model container
   public func loadModelIfNeeded(
-    progressHandler: ((Progress) -> Void)? = nil
+    progressHandler: (@Sendable (Progress) -> Void)? = nil
   ) async throws -> ModelContainer {
     switch loadState {
     case .idle:
       do {
         let modelContainer = try await VLMModelFactory.shared.loadContainer(
           configuration: configuration,
-          progressHandler: progressHandler
+          progressHandler: progressHandler ?? { _ in }
         )
         loadState = .loaded(modelContainer)
         return modelContainer
@@ -75,23 +75,30 @@ public final class VLMService: @unchecked Sendable {
   /// Generates a response for the given prompt and image
   /// - Parameters:
   ///   - prompt: The text prompt
-  ///   - image: Optional image to analyze
+  ///   - imageData: Optional image data to analyze
   ///   - video: Optional video URL to analyze
   ///   - updateHandler: Optional handler for receiving token updates
   /// - Returns: The generated response and performance metrics
   public func generate(
     prompt: String,
-    image: CIImage? = nil,
+    imageData: Data? = nil,  
     video: URL? = nil,
-    updateHandler: ((String) -> Void)? = nil
+    updateHandler: (@Sendable @MainActor (String) -> Void)? = nil
   ) async throws -> (output: String, tokensPerSecond: Double) {
     let modelContainer = try await loadModelIfNeeded()
 
     // Seed for reproducibility while allowing variation between generations
     MLXRandom.seed(UInt64(Date.timeIntervalSinceReferenceDate * 1000))
 
-    return try await modelContainer.perform { context in
-      let images: [UserInput.Image] = image.map { [.ciImage($0)] } ?? []
+    let generateResult = try await modelContainer.perform { context in
+      let images: [UserInput.Image]
+      if let imageData = imageData,
+         let ciImage = CIImage(data: imageData) {
+        images = [.ciImage(ciImage)]
+      } else {
+        images = []
+      }
+      
       let videos: [UserInput.Video] = video.map { [.url($0)] } ?? []
 
       var userInput = UserInput(
@@ -114,20 +121,25 @@ public final class VLMService: @unchecked Sendable {
 
       let input = try await context.processor.prepare(input: userInput)
 
+      // Capture the updateHandler before using in closure
+      let capturedHandler = updateHandler
+      
       return try MLXLMCommon.generate(
         input: input,
         parameters: generateParameters,
         context: context
       ) { tokens in
-        if let updateHandler = updateHandler {
+        if let handler = capturedHandler {
           let text = context.tokenizer.decode(tokens: tokens)
           Task { @MainActor in
-            updateHandler(text)
+            handler(text)
           }
         }
 
         return tokens.count >= maxTokens ? .stop : .more
       }
     }
+    
+    return (output: generateResult.output, tokensPerSecond: generateResult.tokensPerSecond)
   }
 }
