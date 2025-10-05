@@ -1,5 +1,5 @@
 {
-  "originHash" : "262ec80cd73a4b35b521cedd3cb793a0421d8c313537b7acc02878364a1561d7",
+  "originHash" : "71cd74d6afdf40951b2c5849ce7ff5893e706d3bb1d17c1ec0dd1079dba25859",
   "pins" : [
     {
       "identity" : "gzipswift",
@@ -11,21 +11,12 @@
       }
     },
     {
-      "identity" : "jinja",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/johnmai-dev/Jinja",
-      "state" : {
-        "revision" : "bbddb92fc51ae420b87300298370fd1dfc308f73",
-        "version" : "1.1.1"
-      }
-    },
-    {
       "identity" : "mlx-swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ml-explore/mlx-swift",
       "state" : {
-        "revision" : "b990c58153af70eb0914bca7dd74401d341fa9ae",
-        "version" : "0.21.3"
+        "revision" : "96c0f69cf15f38abd6248bb71fca908171dab1d8",
+        "version" : "0.25.6"
       }
     },
     {
@@ -34,16 +25,7 @@
       "location" : "https://github.com/ml-explore/mlx-swift-examples.git",
       "state" : {
         "branch" : "main",
-        "revision" : "20701c0eeedd339ede4dd3b964152d814a3e9716"
-      }
-    },
-    {
-      "identity" : "swift-argument-parser",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-argument-parser.git",
-      "state" : {
-        "revision" : "0fbc8848e389af3bb55c182bc19ca9d5dc2f255b",
-        "version" : "1.4.0"
+        "revision" : "0afaa267171972ffdac9f4f1b320a585e2511bd5"
       }
     },
     {
@@ -53,6 +35,15 @@
       "state" : {
         "revision" : "671108c96644956dddcd89dd59c203dcdb36cec7",
         "version" : "1.1.4"
+      }
+    },
+    {
+      "identity" : "swift-jinja",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/huggingface/swift-jinja.git",
+      "state" : {
+        "revision" : "c1ef5963ba4a97a589b9c9583ff4ee3352a86d23",
+        "version" : "2.1.0"
       }
     },
     {
@@ -69,8 +60,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/huggingface/swift-transformers",
       "state" : {
-        "revision" : "55710ddfb1ae804b4b7ce973be75cf2e41272185",
-        "version" : "0.1.17"
+        "revision" : "a2e184dddb4757bc943e77fbe99ac6786c53f0b2",
+        "version" : "1.0.0"
       }
     }
   ],
