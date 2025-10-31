@@ -68,7 +68,7 @@ public actor VLMService {
     
     // Keep the init the same
     public init(
-        configuration: ModelConfiguration = ModelRegistry.qwen2VL2BInstruct4Bit,
+        configuration: ModelConfiguration = VLMRegistry.qwen2VL2BInstruct4Bit,
         generateParameters: GenerateParameters = .init(temperature: 0.6),
         maxTokens: Int = 800
     ) {

@@ -14,7 +14,7 @@ public struct VLMServiceProvider: DynamicProperty {
     }
     
     public init(
-        configuration: ModelConfiguration = ModelRegistry.qwen2VL2BInstruct4Bit,
+        configuration: ModelConfiguration = VLMRegistry.qwen2VL2BInstruct4Bit,
         generateParameters: GenerateParameters = .init(temperature: 0.6),
         maxTokens: Int = 800
     ) {
@@ -32,7 +32,7 @@ public struct VLMServiceProvider: DynamicProperty {
         let service: VLMService
         
         init(
-            configuration: ModelConfiguration = ModelRegistry.qwen2VL2BInstruct4Bit,
+            configuration: ModelConfiguration = VLMRegistry.qwen2VL2BInstruct4Bit,
             generateParameters: GenerateParameters = .init(temperature: 0.6),
             maxTokens: Int = 800
         ) {
