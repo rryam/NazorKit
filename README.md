@@ -41,7 +41,7 @@ struct ContentView: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
-                    .vlm(
+                    .analyzeMedia(
                         service: vlmService,
                         prompt: "Describe this image in detail",
                         image: image
@@ -76,7 +76,7 @@ NazorKit also supports video analysis:
 ```swift
 VideoPlayer(player: AVPlayer(url: videoURL))
     .frame(height: 300)
-    .vlm(
+    .analyzeMedia(
         service: vlmService,
         prompt: "What's happening in this video?",
         video: videoURL

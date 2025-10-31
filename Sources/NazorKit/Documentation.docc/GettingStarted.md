@@ -26,7 +26,7 @@ struct ContentView: View {
                     .resizable()
                     .scaledToFit()
                     // Add VLM capabilities with a simple modifier
-                    .vlm(
+                    .analyzeMedia(
                         service: vlmService,
                         prompt: "Describe this image in detail",
                         image: image
@@ -78,7 +78,7 @@ struct VideoAnalysisView: View {
             if let videoURL {
                 VideoPlayer(player: AVPlayer(url: videoURL))
                     .frame(height: 300)
-                    .vlm(
+                    .analyzeMedia(
                         service: vlmService,
                         prompt: "What's happening in this video?",
                         video: videoURL
@@ -102,4 +102,4 @@ struct VideoAnalysisView: View {
 - ``ModelConfiguration``
 
 ### View Modifiers
-- ``View/vlm(service:prompt:image:video:onCompletion:)`` 
+- ``View/analyzeMedia(service:prompt:image:video:onCompletion:)`` 

@@ -182,7 +182,7 @@ extension View {
     ///   - onCompletion: Optional completion handler called with the generated text
     /// - Returns: A view with VLM capabilities
     @MainActor
-    public func vlm(
+    public func analyzeMedia(
         service: VLMService,
         prompt: String,
         image: CIImage? = nil,
@@ -212,14 +212,14 @@ extension View {
     ///   - onCompletion: Optional completion handler called with the generated text
     /// - Returns: A view with VLM capabilities
     @ViewBuilder
-    public func vlm(
+    public func analyzeMedia(
         service: VLMService,
         prompt: String,
         image: UIImage,
         onCompletion: ((String) -> Void)? = nil
     ) -> some View {
         if let ciImage = CIImage(image: image) {
-            vlm(
+            analyzeMedia(
                 service: service,
                 prompt: prompt,
                 image: ciImage,
@@ -243,7 +243,7 @@ extension View {
     ///   - onCompletion: Optional completion handler called with the generated text
     /// - Returns: A view with VLM capabilities
     @ViewBuilder
-    public func vlm(
+    public func analyzeMedia(
         service: VLMService,
         prompt: String,
         image: NSImage,
@@ -252,7 +252,7 @@ extension View {
         if let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
             let ciImage = CIImage(cgImage: cgImage)
             
-            vlm(
+            analyzeMedia(
                 service: service,
                 prompt: prompt,
                 image: ciImage,
