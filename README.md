@@ -1,4 +1,6 @@
 # NazorKit
+[![Star History Chart](https://api.star-history.com/svg?repos=rryam/NazorKit&type=Date)](https://star-history.com/#rryam/NazorKit&Date)
+
 
 NazorKit is a library built on top of MLX-Swift to easily integrate on-device vision language models into your iOS app. 
 
