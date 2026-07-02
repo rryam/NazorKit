@@ -19,51 +19,58 @@ import MLXRandom
 /// )
 /// ```
 public actor VLMService {
-    /// The current state of the model
-    private enum LoadState: Sendable {
-        case idle
-        case loaded(ModelContainer)
-        case failed(Error)
-    }
+    actor LoadCache<Value: Sendable> {
+        private enum State {
+            case idle
+            case loading(Int, Task<Value, Error>)
+            case loaded(Value)
+            case failed(Error)
+        }
 
-    // ModelStateManager and properties remain the same
+        private var state = State.idle
+        private var nextLoadID = 0
 
-    // Remove 'private actor' since VLMService itself is now an actor
-    private final class ModelStateManager {
-        private var state = LoadState.idle
-
-        // ModelStateManager methods remain the same but don't need async/await anymore
-        // since they're protected by the parent actor
-        func getContainer() throws -> ModelContainer {
+        func loadIfNeeded(
+            using loader: @Sendable @escaping () async throws -> Value
+        ) async throws -> Value {
             switch state {
             case .idle:
-                throw VLMError.modelNotLoaded
-            case .loaded(let container):
-                return container
+                nextLoadID += 1
+                let loadID = nextLoadID
+                let task = Task.detached {
+                    try await loader()
+                }
+                state = .loading(loadID, task)
+                Task {
+                    await finishLoading(loadID: loadID, task: task)
+                }
+
+                return try await task.value
+            case .loading(_, let task):
+                return try await task.value
+            case .loaded(let value):
+                return value
             case .failed(let error):
                 throw error
             }
         }
 
-        func setLoaded(_ container: ModelContainer) {
-            state = .loaded(container)
-        }
-
-        func setFailed(_ error: Error) {
-            state = .failed(error)
-        }
-
-        func isIdle() -> Bool {
-            if case .idle = state {
-                return true
+        private func finishLoading(loadID: Int, task: Task<Value, Error>) async {
+            do {
+                let value = try await task.value
+                guard case .loading(let currentLoadID, _) = state,
+                      currentLoadID == loadID else {
+                    return
+                }
+                state = .loaded(value)
+            } catch {
+                guard case .loading(let currentLoadID, _) = state,
+                      currentLoadID == loadID else {
+                    return
+                }
+                state = .failed(error)
             }
-            return false
         }
-    }
-
-    // Add VLMError enum
-    private enum VLMError: Error {
-        case modelNotLoaded
     }
 
     /// The configuration for the model
@@ -75,8 +82,8 @@ public actor VLMService {
     /// The maximum number of tokens to generate
     private let maxTokens: Int
 
-    /// The state manager
-    private let stateManager = ModelStateManager()
+    /// The loaded model cache.
+    private let loadCache = LoadCache<ModelContainer>()
 
     /// Creates a new VLM service with the specified configuration.
     ///
@@ -111,24 +118,17 @@ public actor VLMService {
     /// - Throws: An error if the model fails to load or download.
     ///
     /// - Note: This method is thread-safe and idempotent. If the model is already loaded,
-    ///   it returns the existing container immediately without reloading.
+    ///   it returns the existing container immediately without reloading. Concurrent callers
+    ///   also share the same in-flight load task instead of starting duplicate downloads or loads.
     public func loadModelIfNeeded(
         progressHandler: (@Sendable (Progress) -> Void)? = nil
     ) async throws -> ModelContainer {
-        if stateManager.isIdle() {
-            do {
-                let modelContainer = try await VLMModelFactory.shared.loadContainer(
-                    configuration: configuration,
-                    progressHandler: progressHandler ?? { _ in }
-                )
-                stateManager.setLoaded(modelContainer)
-                return modelContainer
-            } catch {
-                stateManager.setFailed(error)
-                throw error
-            }
+        try await loadCache.loadIfNeeded { [configuration] in
+            try await VLMModelFactory.shared.loadContainer(
+                configuration: configuration,
+                progressHandler: progressHandler ?? { _ in }
+            )
         }
-        return try stateManager.getContainer()
     }
 
     /// Generates a response for the given prompt and optional media.

@@ -24,6 +24,9 @@ let package = Package(
       dependencies: [
         .product(name: "MLXVLM", package: "mlx-swift-examples"),
         .product(name: "MLXLMCommon", package: "mlx-swift-examples"),
-      ])
+      ]),
+    .testTarget(
+      name: "NazorKitTests",
+      dependencies: ["NazorKit"])
   ]
 )
