@@ -16,7 +16,7 @@ let package = Package(
       targets: ["NazorKit"])
   ],
   dependencies: [
-    .package(url: "https://github.com/ml-explore/mlx-swift-examples.git", branch: "main")
+    .package(url: "https://github.com/ml-explore/mlx-swift-examples.git", from: "2.29.1")
   ],
   targets: [
     .target(
