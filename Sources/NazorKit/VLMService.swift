@@ -22,37 +22,53 @@ public actor VLMService {
     actor LoadCache<Value: Sendable> {
         private enum State {
             case idle
-            case loading(Task<Value, Error>)
+            case loading(Int, Task<Value, Error>)
             case loaded(Value)
             case failed(Error)
         }
 
         private var state = State.idle
+        private var nextLoadID = 0
 
         func loadIfNeeded(
             using loader: @Sendable @escaping () async throws -> Value
         ) async throws -> Value {
             switch state {
             case .idle:
-                let task = Task<Value, Error> {
+                nextLoadID += 1
+                let loadID = nextLoadID
+                let task = Task.detached {
                     try await loader()
                 }
-                state = .loading(task)
-
-                do {
-                    let value = try await task.value
-                    state = .loaded(value)
-                    return value
-                } catch {
-                    state = .failed(error)
-                    throw error
+                state = .loading(loadID, task)
+                Task {
+                    await finishLoading(loadID: loadID, task: task)
                 }
-            case .loading(let task):
+
+                return try await task.value
+            case .loading(_, let task):
                 return try await task.value
             case .loaded(let value):
                 return value
             case .failed(let error):
                 throw error
+            }
+        }
+
+        private func finishLoading(loadID: Int, task: Task<Value, Error>) async {
+            do {
+                let value = try await task.value
+                guard case .loading(let currentLoadID, _) = state,
+                      currentLoadID == loadID else {
+                    return
+                }
+                state = .loaded(value)
+            } catch {
+                guard case .loading(let currentLoadID, _) = state,
+                      currentLoadID == loadID else {
+                    return
+                }
+                state = .failed(error)
             }
         }
     }
