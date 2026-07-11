@@ -21,7 +21,7 @@ To add NazorKit to your project, simply include it in your `Package.swift` file:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/rryam/NazorKit.git", .upToNextMajor(from: "0.1.0"))
+    .package(url: "https://github.com/rryam/NazorKit.git", .upToNextMajor(from: "0.1.1"))
 ]
 ```
 
