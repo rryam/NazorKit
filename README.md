@@ -218,5 +218,3 @@ NazorKit is available under the MIT license. See [LICENSE](LICENSE) for more inf
 ## Acknowledgments
 
 - Thanks to the MLX team for their excellent work on the MLX and the MLX Swift framework!
-
-[![Star History Chart](https://api.star-history.com/svg?repos=rryam/NazorKit&type=Date)](https://star-history.com/#rryam/NazorKit&Date)
